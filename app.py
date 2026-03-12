@@ -6,7 +6,28 @@ import cv2
 
 app = FastAPI()
 
-model = YOLO("best.pt")
+model = None
+
+
+# ----------------------
+# Load model at startup
+# ----------------------
+
+@app.on_event("startup")
+def load_model():
+    global model
+    print("Loading model...")
+    model = YOLO("best.pt")
+    print("Model loaded")
+
+
+# ----------------------
+# Health check
+# ----------------------
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 # ----------------------
@@ -32,11 +53,13 @@ def main():
 
 
 # ----------------------
-# Prediction API
+# Predict
 # ----------------------
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+
+    global model
 
     img_bytes = await file.read()
 
